@@ -1,0 +1,698 @@
+
+/*
+   Quick Sort, Merge Sort, Selection Sort and Radix Sort implemenation in C++ for Long, Float and String Data types (Using Templates)
+   Data can be sorted in Ascending or Descending order
+
+   Coded by:  Muhammad Hasnain Naeem, Syed Muazzam Ali, Syed Ayyan Haider
+   Dated: 11/18/2018
+*/
+
+#include <iostream>
+#include <time.h>
+#include <algorithm>
+#include <queue>
+#include <string>
+#include <typeinfo>
+#include <math.h>
+#include <map>
+
+using namespace std;
+
+template <class T>
+class Algorithms {
+
+public:
+   void swap(T* elem1, T* elem2)
+   {
+      T temp = *elem1;
+      *elem1 = *elem2;
+      *elem2 = temp;
+   }
+
+
+   int quickSortSub(T* array, int start, int end, bool desc = false) {
+      int pivotIndex = end;
+      T pivot = array[pivotIndex];
+
+      int i = start - 1;
+      for (int j = start; j < end; j++)
+      {
+         if (desc ? array[j] >= pivot : array[j] <= pivot)
+         {
+            i++;
+            swap(array + i, array + j);
+         }
+      }
+
+      swap(array + i + 1, array + end);
+      return (i + 1);
+   }
+
+   void quickSort(T* array, int start, int end, bool desc = false)
+   {
+      if (start < end)
+      {
+         int m = quickSortSub(array, start, end, desc);
+         quickSort(array, start, m - 1, desc);
+         quickSort(array, m + 1, end, desc);
+      }
+   }
+
+
+   /*
+    * Merge Sort Algorithm uses 2 functions given below
+    * Complexity of merge sort is (log n) * n
+    * Space complexity: N
+    */
+   void merge(T* array, int start, int mid, int last, bool desc = false) {
+      /*
+       * Time Complexity of this method is N
+       * There are no swaps
+       */
+      T tempArr[100];
+
+      int i = start; //for left part of array
+      int j = mid + 1; //for right part of array
+      int k = 0; //for temp array
+      while (i <= mid && j <= last)
+      {
+         if (desc ? array[i] > array[j] : array[i] < array[j])
+         {
+            tempArr[k] = array[i];
+            i++;
+            k++;
+         }
+         else {
+            tempArr[k] = array[j];
+            j++;
+            k++;
+         }
+      }
+
+      while (i <= mid) {
+         tempArr[k] = array[i];
+         i++;
+         k++;
+      }
+
+      while (j <= last) {
+         tempArr[k] = array[j];
+         j++;
+         k++;
+      }
+
+      // Assign sorted data stored in temp[] to array[]
+      for (i = start; i <= last; i++)
+      {
+         array[i] = tempArr[i - start];
+      }
+   }
+
+   void mergeSort(T* array, int start, int last, bool desc = false) {
+      /*
+       * Complexity of this part is log n
+       */
+      int mid;
+
+      if (start < last) { //dividing array until there's 1 element in each array
+         mid = (start + last) / 2; //to divide array into two parts
+
+         mergeSort(array, start, mid, desc);
+         mergeSort(array, mid + 1, last, desc);
+
+         merge(array, start, mid, last, desc); //merging and sorting subarrays
+      }
+   }
+
+
+   /*
+      Complexity for Comparisons
+         Average: n^2
+         Best: n^2
+         Worst: n^2
+      Complexity for Swaps
+         Average: n
+         Best: n
+         Worst: n
+   */
+
+   void selectionSort(T* array, int len, bool desc = false)
+   {
+      int smallest; //to save index of smallest number in each iteration
+      for (int i = 0, j; i < len; i++)
+      {
+         smallest = i;
+         for (j = i + 1; j < len; j++) //finding smallest in unsorted array
+         {
+            if (desc ? array[j] > array[smallest] :array[j] < array[smallest])
+            {
+               smallest = j;
+            }
+         }
+         swap(array + i, array + smallest); //Place smallest on left side
+      }
+   }
+
+   void radixSort(T* array, int len, bool desc = false)
+   {
+      long d, j, k, factor;
+      const int radix = 10;
+      const int digits = 10;
+
+      queue<T> queues[radix];
+
+      for (d = 0, factor = 1; d < digits; factor *= radix, d++)
+      {
+         for (j = 0; j < len; j++)
+            if (desc)  //ascending order
+               queues[(radix - 1) - (((long)array[j] / factor) % radix)].push(array[j]);
+            else      //descending order
+               queues[((long)array[j] / factor) % radix].push(array[j]);
+
+         for (j = k = 0; j < radix; j++)
+            while (!queues[j].empty())
+            {
+               array[k++] = queues[j].front();
+               queues[j].pop();
+            }
+      }
+   }
+
+   // Call this method before Radix Sort for Float Values Only
+   // This method returns a multiplier which is needed to convert all values containing decimal point into integer values
+   // For example, we need 100 to convert 99.99 into integer only value which is 9999
+   // If there is 9.9 and 99.99 then we need 10 & 100 for both of these. Maximum of these will be returned
+   long numToConvertToInt(float* floatArray, int n) 
+   {
+      float num = 0;
+      float maxMultiplier = 1;
+      for (int i = 0; i < n; i++)
+      {
+         float num = floatArray[i];
+         float fractionalPart = num - long(num);
+         long multiplier = 1;
+
+         while (fractionalPart != 0) { // Multiply multiplier variable by 10 until Fractional Part becomes zero
+            num *= 10;
+            multiplier *= 10;
+            fractionalPart = num - long(num);
+         }
+
+         if (multiplier > maxMultiplier) // We need only maximum multiplier to convert  Float array to Int array
+            maxMultiplier = multiplier;
+      }
+
+      return maxMultiplier;
+   }
+
+   // Call this method before Radix Sort for Float Values Only
+   // Using multiplier found using numToConvertToInt() method to make remove decimal points from our float array
+   void fractionalToInt(float* array, long multiplier, int n) //
+   {
+      for (int i = 0; i < n; i++)
+      {
+         array[i] *= multiplier; // Multiplying by multiplier to remove Floating Point in our data 
+      }
+   }
+
+   // Call this method after Radix Sort for Float Values Only
+   // Converting back to float values
+   void intToFractional(float* floatArray, long multiplier, int n)
+   {
+      for (int i = 0; i < n; i++)
+      {
+         floatArray[i] /= multiplier; // Dividing by multiplier to get actual data back
+      }
+
+   }
+};
+
+
+// String's value (DIGITS) converted to long for sorting
+long stringLongVal(string s)
+{
+   long val = 0;
+
+   const int DIGITS = 5;  //first n digits to take
+   for (long i = 0; i < s.length() && i < DIGITS; i++)
+      val += ((long)s[i]) * pow(10, (DIGITS - i));
+
+   val *= 10;
+
+   return val;
+}
+
+
+// Methods to print array
+template<typename T>
+void printArr(T* array, int len)
+{
+   cout << endl << "\tArray Values:" << endl;
+   for (int j = 0; j < len; j++) {
+      cout << "\t " << array[j] << "\t";
+   }
+   cout << endl;
+}
+
+// Methods to take input of array
+template<typename T>
+int inputNumArr(T* array, int LEN) // Returns number of elements entered
+{
+   cout << "\n\tHow many entries do you want to enter? (0-100)" << endl << ">";
+   int len;
+   cin >> len;
+
+   while (len > LEN) // Entries size can't exceed size of array
+   {
+      cout << "\tMore than " << LEN << "values cannot be entered. Enter again:" << endl << ">";
+      cin >> len;
+   }
+
+   cout << "\n\tEnter input values for array:" << endl;
+   T input;
+   for (int i = 0; i < len; i++)
+   {
+      cout << "\t";
+      cin >> input;
+      array[i] = input;
+   }
+   return len;
+}
+
+
+int inputStrArr(string* array, int LEN) // Returns number of elements entered
+{
+   cout << "\n\tHow many entries do you want to enter? (0-100)" << endl << ">";
+   int len;
+   cin >> len;
+
+   while (len > LEN) // Entries size can't exceed size of array
+   {
+      cout << "\tMore than " << LEN << "values cannot be entered. Enter again:" << endl << ">";
+      cin >> len;
+   }
+
+   cout << "\n\tEnter input values for array:" << endl;
+   char input[1000]; // Max length for string is 1000 characters
+
+   cin.getline(input, sizeof(input));
+   for (int i = 0; i < len; i++)
+   {
+      cout << "\t";
+      cin.getline(input, sizeof(input));
+      array[i] = input;
+   }
+
+   return len;
+}
+
+
+#define LEN 100
+int main()
+{
+   int len = LEN; // stores actual number of elements currently in array
+
+   while (true) {
+
+      bool desc = false;
+      char *desc_chr = new char[5];
+      *(desc_chr) = 0;
+
+      int algoType = 0;
+      // Algorithm type options
+
+      while (algoType > 5 || algoType < 1) //This loop can exit program
+      {
+         cout << "\t*****************************************" << endl;
+         cout << "\t* Select type of Algorithm:\t\t*" << endl;
+         cout << "\t*\t1. Selection Sort\t\t*" << endl;
+         cout << "\t*\t2. Merge Sort\t\t\t*" << endl;
+         cout << "\t*\t3. Quick Sort\t\t\t*" << endl;
+         cout << "\t*\t4. Radix Sort\t\t\t*" << endl;
+         cout << "\t*\t5. Exit\t\t\t\t*" << endl;
+         cout << "\t*****************************************" << endl;
+
+         cout << "> ";
+         cin >> algoType;
+
+         if (algoType == 5) {
+            return 0; //Exiting
+         }
+      }
+
+
+      while (*(desc_chr) != 'd' && *(desc_chr) != 'D' && *(desc_chr) != 'a' && *(desc_chr) != 'A')
+      {
+         cout << "\tAscending/Descending sort (A/D): " << endl << ">";
+         cin >> desc_chr;
+      }
+
+      if (*(desc_chr) == 'd' || *(desc_chr) == 'D')
+         desc = true;
+
+
+      cout << endl << endl;
+
+      // Datatype options
+      int dataType = 0;
+      while (dataType > 4 || dataType < 1) {
+         cout << "\t*****************************************" << endl;
+         cout << "\t* Select Data Type:\t\t\t*" << endl;
+         cout << "\t*\t1. Long\t\t\t\t*" << endl;
+         cout << "\t*\t2. Float\t\t\t*" << endl;
+         cout << "\t*\t3. String\t\t\t*" << endl;
+         cout << "\t*****************************************" << endl;
+         cout << "> ";
+         cin >> dataType;
+      }
+
+
+         // 1. Selection Sort
+      if (algoType == 1)
+      {
+         //long
+         if (dataType == 1)
+         {
+            long* arrData = new long[LEN];
+            Algorithms<long>* algos = new Algorithms<long>;
+
+            // Taking Input
+            len = inputNumArr(arrData, LEN); // len here is Number of elements entered by user which is <= LEN
+
+            // Sorting and measuring time
+            cout << "\tSelection-sort time (ms): ";
+            clock_t startTime = clock();
+            algos->selectionSort(arrData, len, desc);
+            cout << double(clock() - startTime) / (CLOCKS_PER_SEC * 1000) << endl;
+
+            //Printing
+            printArr(arrData, len);
+
+            delete algos;
+            delete[] arrData;
+         }
+
+         //float
+         else if (dataType == 2)
+         {
+            float* arrData = new float[LEN];
+            Algorithms<float>* algos = new Algorithms<float>;
+
+            // Taking input
+            len = inputNumArr(arrData, LEN); // len here is Number of elements entered by user which is <= LEN
+
+            // Sorting and measuring time
+            cout << "\tSelection-sort time (ms): ";
+            clock_t startTime = clock();
+            algos->selectionSort(arrData, len, desc);
+            cout << double(clock() - startTime) / (CLOCKS_PER_SEC * 1000) << endl;
+
+            // Printing
+            printArr(arrData, len);
+
+            delete algos;
+            delete[] arrData;
+         }
+
+         //string
+         else if (dataType == 3)
+         {
+            string* arrData = new string[LEN];
+            Algorithms<string>* algos = new Algorithms<string>;
+
+            //Taking input
+            len = inputStrArr(arrData, LEN); // len here is Number of elements entered by user which is <= LEN
+
+            // Sorting and measuring time
+            cout << "\tSelection-sort time (ms): ";
+            clock_t startTime = clock();
+            algos->selectionSort(arrData, len, desc);
+            cout << double(clock() - startTime) / (CLOCKS_PER_SEC * 1000) << endl;
+
+            // Printing
+            printArr(arrData, len);
+
+            delete algos;
+            delete[] arrData;
+         }
+      }
+
+      // 2. Merge Sort
+      else if (algoType == 2)
+      {
+         //long
+         if (dataType == 1)
+         {
+            long* arrData = new long[LEN];
+            Algorithms<long>* algos = new Algorithms<long>;
+
+            // Taking Input
+            len = inputNumArr(arrData, LEN); // len here is Number of elements entered by user which is <= LEN
+
+            // Sorting and measuring time
+            cout << "\tMerge-sort time (ms): ";
+            clock_t startTime = clock();
+            algos->mergeSort(arrData, 0, len - 1, desc);
+            cout << double(clock() - startTime) / (CLOCKS_PER_SEC * 1000) << endl;
+
+            //Printing
+            printArr(arrData, len);
+
+            delete algos;
+            delete[] arrData;
+         }
+
+         //float
+         else if (dataType == 2)
+         {
+            float* arrData = new float[LEN];
+            Algorithms<float>* algos = new Algorithms<float>;
+
+            // Taking input
+            len = inputNumArr(arrData, LEN); // len here is Number of elements entered by user which is <= LEN
+
+            // Sorting and measuring time
+            cout << "\tMerge-sort time (ms): ";
+            clock_t startTime = clock();
+            algos->mergeSort(arrData, 0, len - 1, desc);
+            cout << double(clock() - startTime) / (CLOCKS_PER_SEC * 1000) << endl;
+
+            // Printing
+            printArr(arrData, len);
+
+            delete algos;
+            delete[] arrData;
+         }
+
+         //string
+         else if (dataType == 3)
+         {
+            string* arrData = new string[LEN];
+            Algorithms<string>* algos = new Algorithms<string>;
+
+            //Taking input
+            len = inputStrArr(arrData, LEN); // len here is Number of elements entered by user which is <= LEN
+
+            // Sorting and measuring time
+            cout << "\tMerge-sort time (ms): ";
+            clock_t startTime = clock();
+            algos->mergeSort(arrData, 0, len - 1, desc);
+            cout << double(clock() - startTime) / (CLOCKS_PER_SEC * 1000) << endl;
+
+            // Printing
+            printArr(arrData, len);
+
+            delete algos;
+            delete[] arrData;
+         }
+      }
+
+      // 3. Quick Sort
+      else if (algoType == 3)
+      {
+         //long
+         if (dataType == 1)
+         {
+            long* arrData = new long[LEN];
+            Algorithms<long>* algos = new Algorithms<long>;
+
+            // Taking Input
+            len = inputNumArr(arrData, LEN); // len here is Number of elements entered by user which is <= LEN
+
+            // Sorting and measuring time
+            cout << "\tQuick-sort time (ms): ";
+            clock_t startTime = clock();
+            algos->quickSort(arrData, 0, len - 1, desc);
+            cout << double(clock() - startTime) / (CLOCKS_PER_SEC * 1000) << endl;
+
+            //Printing
+            printArr(arrData, len);
+
+            delete algos;
+            delete[] arrData;
+         }
+
+         //float
+         else if (dataType == 2)
+         {
+            float* arrData = new float[LEN];
+            Algorithms<float>* algos = new Algorithms<float>;
+
+
+            // Taking input
+            len = inputNumArr(arrData, LEN); // len here is Number of elements entered by user which is <= LEN
+
+            // Sorting and measuring time
+            cout << "\tQuick-sort time (ms): ";
+            clock_t startTime = clock();
+            algos->quickSort(arrData, 0, len - 1, desc);
+            cout << double(clock() - startTime) / (CLOCKS_PER_SEC * 1000) << endl;
+
+            // Printing
+            printArr(arrData, len);
+            cin.get();
+            cin.get();
+
+            delete algos;
+            delete[] arrData;
+         }
+
+         //string
+         else if (dataType == 3)
+         {
+            string* arrData = new string[LEN];
+            Algorithms<string>* algos = new Algorithms<string>;
+
+            //Taking input
+            len = inputStrArr(arrData, LEN); // len here is Number of elements entered by user which is <= LEN
+
+            // Sorting and measuring time
+            cout << "\tQuick-sort time (ms): ";
+            clock_t startTime = clock();
+            algos->quickSort(arrData, 0, len - 1, desc);
+            cout << double(clock() - startTime) / (CLOCKS_PER_SEC * 1000) << endl;
+
+            // Printing
+            printArr(arrData, len);
+
+            delete algos;
+            delete[] arrData;
+         }
+      }
+
+      // 4. Radix Sort
+      else if (algoType == 4)
+      {
+         //long
+         if (dataType == 1)
+         {
+            long* arrData = new long[LEN];
+            Algorithms<long>* algos = new Algorithms<long>;
+
+            // Taking Input
+            len = inputNumArr(arrData, LEN); // len here is Number of elements entered by user which is <= LEN
+
+            // Sorting and measuring time
+            cout << "\tRadix-sort time (ms): ";
+            clock_t startTime = clock();
+            algos->radixSort(arrData, len, desc);
+            cout << double(clock() - startTime) / (CLOCKS_PER_SEC * 1000) << endl;
+
+            //Printing
+            printArr(arrData, len);
+            cin.get();
+            cin.get();
+
+            delete algos;
+            delete[] arrData;
+         }
+
+         //float
+         else if (dataType == 2)
+         {
+            float* arrData = new float[LEN];
+            Algorithms<float>* algos = new Algorithms<float>;
+
+            // Taking input
+            len = inputNumArr(arrData, LEN); // len here is Number of elements entered by user which is <= LEN
+
+            // Sorting and measuring time
+            cout << "\tRadix-sort time (ms): ";
+            clock_t startTime = clock();
+
+            // Getting highest multiple of 10 required to convert all digits to Float
+            long multiplier = algos->numToConvertToInt(arrData, len);
+
+            // Multiplying all to get rid of decimal point
+            algos->fractionalToInt(arrData, multiplier, len);
+
+            // Sorting
+            algos->radixSort(arrData, len, desc);
+
+            // Getting back our actual array
+            algos->intToFractional(arrData, multiplier, len);
+
+            cout << double(clock() - startTime) / (CLOCKS_PER_SEC * 1000) << endl;
+
+            // Printing
+            printArr(arrData, len);
+
+            delete algos;
+            delete[] arrData;
+         }
+
+         //string
+         else if (dataType == 3)
+         {
+            map<long, string> m;
+
+            string *arrData = new string[LEN];
+            int len2 = inputStrArr(arrData, LEN);
+
+            long *stringValArray = new long[len2];
+
+            Algorithms<long>* algos = new Algorithms<long>;
+
+            //making strings sortable via radix sort by
+            //converting them (first n values) in long
+            //and storing them in map for later retrieval
+
+            for (int i = 0; i < len2; i++)
+            {
+               long stringVal = stringLongVal(arrData[i]);
+
+               if (m.find(stringVal) != m.end())
+               {
+                  while (m.find(stringVal) != m.end())
+                     stringVal++;
+
+                  m[stringVal] = arrData[i];
+               }
+               else
+                  m[stringVal] = arrData[i];
+
+               stringValArray[i] = stringVal;
+            }
+
+            // Sorting and measuring time
+            cout << "\tRadix-sort time (ms): ";
+            clock_t startTime = clock();
+            algos->radixSort(stringValArray, len2, desc);
+            cout << double(clock() - startTime) / (CLOCKS_PER_SEC * 1000) << endl;
+
+            for (int i = 0; i < len2; i++)
+            {
+               arrData[i] = m[stringValArray[i]];
+            }
+
+            printArr(arrData, len2);
+            delete algos;
+            delete[] arrData;
+         }
+      }
+      cout << endl << "\t\t::Press Enter To Continue::" << endl << endl;
+      cin.get();
+      cin.get();
+   }
+}
+

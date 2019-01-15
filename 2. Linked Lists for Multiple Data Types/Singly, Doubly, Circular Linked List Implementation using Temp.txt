@@ -1,0 +1,1636 @@
+
+//assign1dsa.cpp
+// Singly, Doubly, Circular Linked Lists Implementation using Generic Programming (Template Classes)
+//Written by:
+//        Muhammad Hasnain Naeem
+//        Muazzam Ali Kazmi
+//        Syed Ayan Haider
+
+/*
+Implementation includes:
+Linked List Types:
+1.	Singly
+2.	Doubly
+3.	Singly Circular
+4.	Doubly Circular
+
+Data Types: 
+1.	Int
+2.	Long
+3.	Float
+4.	Char
+
+Options:
+1.	Insert in List
+2.	Display List
+3.	Delete Nodes
+4.	Search Element
+*/
+
+#include <iostream>
+#include <stdio.h>
+using namespace std;
+
+#define MAX_LIST 256
+
+template <class T>
+class List {
+public:
+
+    //Insertion
+    virtual void addToHead(T value) = 0;
+    virtual void addToTail(T value) = 0;
+    virtual int addToLoc(T value, int loc) = 0;
+
+    //Deletion
+    virtual void delFromHead() = 0;
+    virtual void delFromTail() = 0;
+    virtual int delFromLoc(int i) = 0;
+
+    //Searching
+    virtual int* searchVal(T value) = 0; //Returns an array, where array[0] is number of times elements
+    //was found and next slots contain indices where element was found
+    virtual void search() = 0; //Prints indices of searched element
+
+    //Displaying elements of list
+    virtual void displl() = 0;
+};
+
+//Singly linked list
+template <class T>
+class SinglyLinkedList : public List <T>
+{
+
+private:
+    struct node
+    {
+        T value;
+        node *next;
+    };
+
+    node *head = NULL;
+    node *tail = NULL;
+    int total = 0;
+
+    //used in search function as list of all matching locations
+    int matching[MAX_LIST] = { 0 };
+
+
+    node* newNode(T value, node *next = NULL)
+    {
+        node *nd = new node;
+        nd->value = value;
+        nd->next = next;
+        total++;
+        return nd;
+    }
+
+public:
+    void addToHead(T value)
+    {
+        node *temp = newNode(value);
+
+        if (head == NULL && tail == NULL)  //new node
+        {
+            head = tail = temp;
+        }
+        else
+        {
+            temp->next = head;
+            head = temp;
+        }
+    }
+
+    void addToTail(T value)
+    {
+        node *temp = newNode(value);
+
+        if (head == NULL && tail == NULL)  //new node
+        {
+            head = tail = temp;
+        }
+        else
+        {
+            tail->next = temp;
+            tail = temp;
+        }
+    }
+
+    int addToLoc(T value, int loc)
+    {
+        if (loc == 0)
+        {
+            addToHead(value);
+            return 0;  //success
+        }
+        else if (loc == total)
+        {
+            addToTail(value);
+            return 0;  //success
+        }
+
+        node *itr = head;
+        for (int i = 0; i < total; i++)
+        {
+            //required location
+            if (i == loc - 1)
+            {
+                node *temp = newNode(value, itr->next);
+                itr->next = temp;
+                return 0;
+            }
+            itr = itr->next;
+        }
+
+        return -1; //wrong location
+
+    }
+
+    void delFromHead()
+    {
+        if (head == NULL && tail == NULL)
+            return;
+
+        node *temp = head;
+        head = head->next;
+        delete temp;
+        total--;
+
+        if (total == 0)
+            head = tail = NULL;
+    }
+
+    void delFromTail()
+    {
+        if (head == NULL && tail == NULL)
+            return;
+
+
+        //seeking to the node before tail
+        node *itr = head;
+        for (int i = 0; i < total - 2; i++)
+            itr = itr->next;
+
+        //deleting tail and linking node before tail to head
+        delete itr->next;
+        tail = itr;
+        total--;
+
+        if (total == 0)
+            head = tail = NULL;
+    }
+
+    int delFromLoc(int loc)
+    {
+        if (loc >= total) //in case of out-of-range location
+            return -1;
+
+
+        if (loc == 0)
+        {
+            delFromHead();
+            return 0;  //success
+        }
+        else if (loc == total - 1)
+        {
+            delFromTail();
+            return 0;  //success
+        }
+
+        node *itr = head;
+
+        for (int i = 0; i < total; i++)
+        {
+            if (i == loc - 1)
+            {
+                node *temp = itr->next;
+                itr->next = itr->next->next;
+                delete temp;
+                total--;
+                return 0;
+            }
+            itr = itr->next;
+        }
+        return -1; //wrong location
+    }
+
+    int* searchVal(T value)
+    {
+        node *itr = head;
+        int idx = 1;
+        for (int i = 0; i < total; i++)
+        {
+            if (itr->value == value)
+                matching[idx++] = i;
+
+            itr = itr->next;
+        }
+        matching[0] = idx;
+
+        return matching;
+    }
+
+    void search() {
+        cout << "Enter element to search:" << endl;
+        T value;
+        cin >> value;
+        int* array = searchVal(value);
+
+        if (array[0] > 1) {
+            cout << "Element was found at:\t";
+            for (int i = 1; i < array[0]; i++) {
+                cout << array[i] << "\t";
+            }
+            cout << endl;
+        }
+
+        else
+            cout << "Element was not found in list." << endl;
+    }
+
+    void displl()
+    {
+        cout << "=============\n";
+        cout << "Total: " << total << "\n";
+
+        node *itr = head;
+        for (int i = 0; i < total; i++)
+        {
+            cout << itr->value << "\n";
+            itr = itr->next;
+        }
+
+        if (total)
+            cout << "\n";
+    }
+
+    void insert() { //Calls insertToLoc() method - Increases code generality
+        bool flag = true;
+        while (flag) {
+            int choice = -1;
+            cout << "Select option:" << endl;
+            cout << "\t1. Insert at head" << endl;
+            cout << "\t2. Inert at tail" << endl;
+            cout << "\t3. Insert at index" << endl;
+            cout << "\t4. Exit" << endl;
+            cout << "> ";
+            cin >> choice;
+
+            switch (choice)
+            {
+                case 1:
+                {
+                    cout << endl << "\tEnter element to insert: ";
+                    T element;
+                    cin >> element;
+                    addToHead(element);
+                    cout << "\tElement successfully inserted." << endl;
+                    break;
+                }
+
+                case 2:
+                {
+                    cout << endl << "\tEnter element to insert: ";
+                    T element;
+                    cin >> element;
+                    addToTail(element);
+                    cout << "\tElement successfully inserted." << endl;
+                    break;
+                }
+
+                case 3:
+                {
+                    cout << endl << "\tEnter element to insert: ";
+                    T element;
+                    cin >> element;
+                    cout << endl << "\tEnter Index: ";
+                    size_t position = 0;
+                    cin >> position;
+                    addToLoc(element, position);
+                    cout << "\tElement successfully inserted." << endl;
+                }
+
+                case 4:
+                {
+                    flag = false; //Exiting the loop
+                    break;
+                }
+
+                default:
+                {
+                    cout << "Wrong option input. Try Again." << endl;
+                    break;
+                }
+            } //Switch ends
+        }
+    }
+
+    void deleteNode() {  //Shows deleting options and calls delFromLoc- Increases code generality
+        bool flag = true;
+        while (flag) {
+            int choice = -1;
+            cout << "Select option:" << endl;
+            cout << "\t1. Delete head" << endl;
+            cout << "\t2. Delete tail" << endl;
+            cout << "\t3. Delete from index" << endl;
+            cout << "\t4. Exit" << endl;
+            cout << "> ";
+            cin >> choice;
+
+            switch (choice)
+            {
+                case 1:
+                {
+                    delFromHead();
+                    break;
+                }
+
+                case 2:
+                {
+                    delFromTail();
+                    break;
+                }
+
+                case 3:
+                {
+                    cout << endl << "\tEnter Index: ";
+                    size_t position = 0;
+                    cin >> position;
+                    if (delFromLoc(position) == 0)
+                        cout << "\tElement successfully inserted." << endl;
+                    else
+                        cout << "Element not found. Hence not deleted." << endl;
+                    break;
+                }
+
+                case 4:
+                {
+                    flag = false; //Exiting the loop
+                    break;
+                }
+
+                default:
+                {
+                    cout << "Wrong option input. Try Again." << endl;
+                    break;
+                }
+            } //Switch ends
+        }
+    }
+};
+
+//Singly circular linked list
+//
+template <class T>
+class SinglyCircularll : public List <T>
+{
+private:
+    struct node
+    {
+        T value;
+        node *next;
+    };
+
+    node *head = NULL;
+    node *tail = NULL;
+    int total = 0;
+
+    //used in search function as list of all matching locations
+    int matching[MAX_LIST] = { 0 };
+
+
+    node* newNode(T value, node *next = NULL)
+    {
+        node *nd = new node;
+        nd->value = value;
+        nd->next = next;
+        total++;
+        return nd;
+    }
+
+public:
+    void addToHead(T value)
+    {
+        node *temp = newNode(value);
+
+        if (head == NULL && tail == NULL)  //new node
+        {
+            temp->next = temp;
+            head = tail = temp;
+        }
+        else
+        {
+            temp->next = head;
+            tail->next = temp;
+            head = temp;
+        }
+    }
+
+    void addToTail(T value)
+    {
+        node *temp = newNode(value);
+
+        if (head == NULL && tail == NULL)  //new node
+        {
+            temp->next = temp;
+            head = tail = temp;
+        }
+        else
+        {
+            tail->next = temp;
+            tail = temp;
+            tail->next = head;
+        }
+    }
+
+    int addToLoc(T value, int loc)
+    {
+        if (loc == 0)
+        {
+            addToHead(value);
+            return 0;  //success
+        }
+        else if (loc == total)
+        {
+            addToTail(value);
+            return 0;  //success
+        }
+
+        node *itr = head;
+        for (int i = 0; i < total; i++)
+        {
+            //required location
+            if (i == loc - 1)
+            {
+                node *temp = newNode(value, itr->next);
+                itr->next = temp;
+                return 0;
+            }
+            itr = itr->next;
+        }
+
+        return -1; //wrong location
+
+    }
+
+    void delFromHead()
+    {
+        if (head == NULL && tail == NULL)
+            return;
+
+        node *temp = head;
+        tail->next = head->next;
+        head = head->next;
+        delete temp;
+        total--;
+
+        if (total == 0)
+            head = tail = NULL;
+    }
+
+    void delFromTail()
+    {
+        if (head == NULL && tail == NULL)
+            return;
+
+
+        //seeking to the node before tail
+        node *itr = head;
+        for (int i = 0; i < total - 2; i++)
+            itr = itr->next;
+
+        //deleting tail and linking node before tail to head
+        delete itr->next;
+        itr->next = head;
+        tail = itr;
+        total--;
+
+        if (total == 0)
+            head = tail = NULL;
+    }
+
+    int delFromLoc(int loc)
+    {
+        if (loc >= total) //in case of out-of-range location
+            return -1;
+
+
+        if (loc == 0)
+        {
+            delFromHead();
+            return 0;  //success
+        }
+        else if (loc == total - 1)
+        {
+            delFromTail();
+            return 0;  //success
+        }
+
+        node *itr = head;
+
+        for (int i = 0; i < total; i++)
+        {
+            if (i == loc - 1)
+            {
+                node *temp = itr->next;
+                itr->next = itr->next->next;
+                delete temp;
+                total--;
+                return 0;
+            }
+            itr = itr->next;
+        }
+        return -1; //wrong location
+    }
+
+    int* searchVal(T value)
+    {
+        node *itr = head;
+        int idx = 1;
+        for (int i = 0; i < total; i++)
+        {
+            if (itr->value == value)
+                matching[idx++] = i;
+
+            itr = itr->next;
+        }
+        matching[0] = idx;
+
+        return matching;
+    }
+
+    void search() {
+        cout << "Enter element to search:" << endl;
+        T value;
+        cin >> value;
+        int* array = searchVal(value);
+
+        if (array[0] > 1) {
+            cout << "Element was found at:\t";
+            for (int i = 1; i < array[0]; i++) {
+                cout << array[i] << "\t";
+            }
+            cout << endl;
+        }
+
+        else
+            cout << "Element was not found in list." << endl;
+    }
+
+    void displl()
+    {
+        cout << "=============\n";
+        cout << "Total: " << total << "\n";
+
+        node *itr = head;
+        for (int i = 0; i < total; i++)
+        {
+            cout << itr->value << "\n";
+            itr = itr->next;
+        }
+
+        if (total)
+            cout << "\n";
+    }
+
+    void insert() { //Calls insertToLoc() method - Increases code generality
+        bool flag = true;
+        while (flag) {
+            int choice = -1;
+            cout << "Select option:" << endl;
+            cout << "\t1. Insert at head" << endl;
+            cout << "\t2. Inert at tail" << endl;
+            cout << "\t3. Insert at index" << endl;
+            cout << "\t4. Exit" << endl;
+            cout << "> ";
+            cin >> choice;
+
+            switch (choice)
+            {
+                case 1:
+                {
+                    cout << endl << "\tEnter element to insert: ";
+                    T element;
+                    cin >> element;
+                    addToHead(element);
+                    cout << "\tElement successfully inserted." << endl;
+                    break;
+                }
+
+                case 2:
+                {
+                    cout << endl << "\tEnter element to insert: ";
+                    T element;
+                    cin >> element;
+                    addToTail(element);
+                    cout << "\tElement successfully inserted." << endl;
+                    break;
+                }
+
+                case 3:
+                {
+                    cout << endl << "\tEnter element to insert: ";
+                    T element;
+                    cin >> element;
+                    cout << endl << "\tEnter Index: ";
+                    size_t position = 0;
+                    cin >> position;
+                    addToLoc(element, position);
+                    cout << "\tElement successfully inserted." << endl;
+                }
+
+                case 4:
+                {
+                    flag = false; //Exiting the loop
+                    break;
+                }
+
+                default:
+                {
+                    cout << "Wrong option input. Try Again." << endl;
+                    break;
+                }
+            } //Switch ends
+        }
+    }
+
+    void deleteNode() { //Shows deleting options and calls delFromLoc- Increases code generality
+        bool flag = true;
+        while (flag) {
+            int choice = -1;
+            cout << "Select option:" << endl;
+            cout << "\t1. Delete head" << endl;
+            cout << "\t2. Delete tail" << endl;
+            cout << "\t3. Delete from index" << endl;
+            cout << "\t4. Exit" << endl;
+            cout << "> ";
+            cin >> choice;
+
+            switch (choice)
+            {
+                case 1:
+                {
+                    delFromHead();
+                    break;
+                }
+
+                case 2:
+                {
+                    delFromTail();
+                    break;
+                }
+
+                case 3:
+                {
+                    cout << endl << "\tEnter Index: ";
+                    size_t position = 0;
+                    cin >> position;
+                    if (delFromLoc(position) == 0)
+                        cout << "\tElement successfully inserted." << endl;
+                    else
+                        cout << "Element not found. Hence not deleted." << endl;
+                    break;
+                }
+
+                case 4:
+                {
+                    flag = false; //Exiting the loop
+                    break;
+                }
+
+                default:
+                {
+                    cout << "Wrong option input. Try Again." << endl;
+                    break;
+                }
+            } //Switch ends
+        }
+    }
+};
+
+
+
+//Doubly Linked List
+//
+template <class T>
+class DoublyLinkedList : public List <T>
+{
+private:
+    struct node
+    {
+        T value;
+        node *next;
+        node *prev;
+    };
+
+    node *head = NULL;
+    node *tail = NULL;
+    int total = 0;
+
+    int matching[MAX_LIST] = { 0 };
+
+
+    node* newNode(T value, node *next = NULL, node *prev = NULL)
+    {
+        node *nd = new node;
+        nd->value = value;
+        nd->next = next;
+        nd->prev = prev;
+        total++;
+        return nd;
+    }
+
+public:
+    void addToHead(T value)
+    {
+        node *temp = newNode(value);
+
+        if (head == NULL && tail == NULL)  //new node
+        {
+            temp->next = temp;
+            temp->prev = temp;
+            head = tail = temp;
+        }
+        else
+        {
+            temp->next = head;
+            head->prev = temp;
+            head = temp;
+        }
+    }
+
+    void addToTail(T value)
+    {
+        node *temp = newNode(value);
+
+        if (head == NULL && tail == NULL)  //new node
+        {
+            temp->next = temp;
+            temp->prev = temp;
+            head = tail = temp;
+        }
+        else
+        {
+            temp->prev = tail;
+            tail->next = temp;
+            tail = temp;
+        }
+    }
+
+    int addToLoc(T value, int loc)
+    {
+        if (loc == 0)
+        {
+            addToHead(value);
+            return 0;  //success
+        }
+        else if (loc == total)
+        {
+            addToTail(value);
+            return 0;  //success
+        }
+
+        node *itr = head;
+        for (int i = 0; i < total; i++)
+        {
+            //required location
+            if (i == loc - 1)
+            {
+                node *temp = newNode(value, itr->next, itr);
+                itr->next = temp;
+                itr->next->next->prev = temp;
+                return 0;
+            }
+            itr = itr->next;
+        }
+
+        return -1; //wrong location
+
+    }
+
+    void delFromHead()
+    {
+        if (head == NULL && tail == NULL)
+            return;
+
+        node *temp = head;
+
+        temp->next->prev = tail;
+        head = head->next;
+
+        delete temp;
+        total--;
+
+        if (total == 0)
+            head = tail = NULL;
+    }
+
+    void delFromTail()
+    {
+        if (head == NULL && tail == NULL)
+            return;
+
+        node *temp = tail;
+        tail = tail->prev;
+        delete temp;
+
+        total--;
+
+        if (total == 0)
+            head = tail = NULL;
+    }
+
+    int delFromLoc(int loc)
+    {
+        if (loc >= total) //in case of out-of-range location
+            return -1;
+
+        if (loc == 0)
+        {
+            delFromHead();
+            return 0;  //success
+        }
+        else if (loc == total - 1)
+        {
+            delFromTail();
+            return 0;  //success
+        }
+
+        node *itr = head;
+
+        for (int i = 0; i < total; i++)
+        {
+            if (i == loc - 1)
+            {
+                node *temp = itr->next;
+
+                itr->next = itr->next->next;
+                temp->next->prev = itr;
+                delete temp;
+                total--;
+                return 0;
+            }
+            itr = itr->next;
+        }
+        return -1; //wrong location
+    }
+
+    int* searchVal(T value)
+    {
+        node *itr = head;
+        int idx = 1;
+        for (int i = 0; i < total; i++)
+        {
+            if (itr->value == value)
+                matching[idx++] = i;
+
+            itr = itr->next;
+        }
+        matching[0] = idx;
+
+        return matching;
+    }
+
+    void search() {
+        cout << "Enter element to search:" << endl;
+        T value;
+        cin >> value;
+        int* array = searchVal(value);
+
+        if (array[0] > 1) {
+            cout << "Element was found at:\t";
+            for (int i = 1; i < array[0]; i++) {
+                cout << array[i] << "\t";
+            }
+            cout << endl;
+        }
+
+        else
+            cout << "Element was not found in list." << endl;
+    }
+
+    void displl()
+    {
+        cout << "=============\n";
+        cout << "Total: " << total << "\n";
+
+        node *itr = head;
+        for (int i = 0; i < total; i++)
+        {
+            cout << itr->value << "\n";
+            itr = itr->next;
+        }
+
+        if (total) //print newline when the list isn't empty
+            cout << "\n";
+    }
+
+    void insert() { //Calls insertToLoc() method - Increases code generality
+        bool flag = true;
+        while (flag) {
+            int choice = -1;
+            cout << "Select option:" << endl;
+            cout << "\t1. Insert at head" << endl;
+            cout << "\t2. Inert at tail" << endl;
+            cout << "\t3. Insert at index" << endl;
+            cout << "\t4. Exit" << endl;
+            cout << "> ";
+            cin >> choice;
+
+            switch (choice)
+            {
+                case 1:
+                {
+                    cout << endl << "\tEnter element to insert: ";
+                    T element;
+                    cin >> element;
+                    addToHead(element);
+                    cout << "\tElement successfully inserted." << endl;
+                    break;
+                }
+
+                case 2:
+                {
+                    cout << endl << "\tEnter element to insert: ";
+                    T element;
+                    cin >> element;
+                    addToTail(element);
+                    cout << "\tElement successfully inserted." << endl;
+                    break;
+                }
+
+                case 3:
+                {
+                    cout << endl << "\tEnter element to insert: ";
+                    T element;
+                    cin >> element;
+                    cout << endl << "\tEnter Index: ";
+                    size_t position = 0;
+                    cin >> position;
+                    addToLoc(element, position);
+                    cout << "\tElement successfully inserted." << endl;
+                }
+
+                case 4:
+                {
+                    flag = false; //Exiting the loop
+                    break;
+                }
+
+                default:
+                {
+                    cout << "Wrong option input. Try Again." << endl;
+                    break;
+                }
+            } //Switch ends
+        }
+    }
+
+    void deleteNode() {  //Shows deleting options and calls delFromLoc- Increases code generality
+        bool flag = true;
+        while (flag) {
+            int choice = -1;
+            cout << "Select option:" << endl;
+            cout << "\t1. Delete head" << endl;
+            cout << "\t2. Delete tail" << endl;
+            cout << "\t3. Delete from index" << endl;
+            cout << "\t4. Exit" << endl;
+            cout << "> ";
+            cin >> choice;
+
+            switch (choice)
+            {
+                case 1:
+                {
+                    delFromHead();
+                    break;
+                }
+
+                case 2:
+                {
+                    delFromTail();
+                    break;
+                }
+
+                case 3:
+                {
+                    cout << endl << "\tEnter Index: ";
+                    size_t position = 0;
+                    cin >> position;
+                    if (delFromLoc(position) == 0)
+                        cout << "\tElement successfully inserted." << endl;
+                    else
+                        cout << "Element not found. Hence not deleted." << endl;
+                    break;
+                }
+
+                case 4:
+                {
+                    flag = false; //Exiting the loop
+                    break;
+                }
+
+                default:
+                {
+                    cout << "Wrong option input. Try Again." << endl;
+                    break;
+                }
+            } //Switch ends
+        }
+    }
+};
+
+
+//Doubly circular linked list
+//
+template <class T>
+class DoublyCircularll : public List <T>
+{
+private:
+    struct node
+    {
+        T value;
+        node *next;
+        node *prev;
+    };
+
+    node *head = NULL;
+    node *tail = NULL;
+    int total = 0;
+
+    int matching[MAX_LIST] = { 0 };
+
+
+    node* newNode(T value, node *next = NULL, node *prev = NULL)
+    {
+        node *nd = new node;
+        nd->value = value;
+        nd->next = next;
+        nd->prev = prev;
+        total++;
+        return nd;
+    }
+
+public:
+    void addToHead(T value)
+    {
+        node *temp = newNode(value);
+
+        if (head == NULL && tail == NULL)  //new node
+        {
+            temp->next = temp;
+            temp->prev = temp;
+            head = tail = temp;
+        }
+        else
+        {
+            temp->prev = tail;
+            temp->next = head;
+
+            head->prev = temp;
+            tail->next = temp;
+
+            head = temp;
+        }
+    }
+
+    void addToTail(T value)
+    {
+        node *temp = newNode(value);
+
+        if (head == NULL && tail == NULL)  //new node
+        {
+            temp->next = temp;
+            temp->prev = temp;
+            head = tail = temp;
+        }
+        else
+        {
+            temp->prev = tail;
+            temp->next = head;
+
+            head->prev = temp;
+            tail->next = temp;
+
+            tail = temp;
+        }
+    }
+
+    int addToLoc(T value, int loc)
+    {
+        if (loc == 0)
+        {
+            addToHead(value);
+            return 0;  //success
+        }
+        else if (loc == total)
+        {
+            addToTail(value);
+            return 0;  //success
+        }
+
+        node *itr = head;
+        for (int i = 0; i < total; i++)
+        {
+            //required location
+            if (i == loc - 1)
+            {
+                node *temp = newNode(value, itr->next, itr);
+                itr->next = temp;
+                itr->next->next->prev = temp;
+                return 0;
+            }
+            itr = itr->next;
+        }
+
+        return -1; //wrong location
+
+    }
+
+    void delFromHead()
+    {
+        if (head == NULL && tail == NULL)
+            return;
+
+        node *temp = head;
+
+        tail->next = head->next;
+        temp->next->prev = tail;
+        head = head->next;
+
+        delete temp;
+        total--;
+
+        if (total == 0)
+            head = tail = NULL;
+    }
+
+    void delFromTail()
+    {
+        if (head == NULL && tail == NULL)
+            return;
+
+        node *temp = tail;
+        tail->prev->next = head;
+        head->prev = tail->prev;
+        tail = tail->prev;
+        delete temp;
+
+        total--;
+
+        if (total == 0)
+            head = tail = NULL;
+    }
+
+    int delFromLoc(int loc)
+    {
+        if (loc >= total) //in case of out-of-range location
+            return -1;
+
+        if (loc == 0)
+        {
+            delFromHead();
+            return 0;  //success
+        }
+        else if (loc == total - 1)
+        {
+            delFromTail();
+            return 0;  //success
+        }
+
+        node *itr = head;
+
+        for (int i = 0; i < total; i++)
+        {
+            if (i == loc - 1)
+            {
+                node *temp = itr->next;
+
+                itr->next = itr->next->next;
+                temp->next->prev = itr;
+                delete temp;
+                total--;
+                return 0;
+            }
+            itr = itr->next;
+        }
+        return -1; //wrong location
+    }
+
+    int* searchVal(T value)
+    {
+        node *itr = head;
+        int idx = 1;
+        for (int i = 0; i < total; i++)
+        {
+            if (itr->value == value)
+                matching[idx++] = i;
+
+            itr = itr->next;
+        }
+        matching[0] = idx;
+
+        return matching;
+    }
+
+    void search() {
+        cout << "Enter element to search:" << endl;
+        T value;
+        cin >> value;
+        int* array = searchVal(value);
+
+        if (array[0] > 1) {
+            cout << "Element was found at:\t";
+            for (int i = 1; i < array[0]; i++) {
+                cout << array[i] << "\t";
+            }
+            cout << endl;
+        }
+
+        else
+            cout << "Element was not found in list." << endl;
+    }
+
+    void displl()
+    {
+        cout << "=============\n";
+        cout << "Total: " << total << "\n";
+
+        node *itr = head;
+        for (int i = 0; i < total; i++)
+        {
+            cout << itr->value << "\n";
+            itr = itr->next;
+        }
+
+        if (total) //print newline when the list isn't empty
+            cout << "\n";
+    }
+
+    void insert() { //Calls insertToLoc() method - Increases code generality
+        bool flag = true;
+        while (flag) {
+            int choice = -1;
+            cout << "Select option:" << endl;
+            cout << "\t1. Insert at head" << endl;
+            cout << "\t2. Inert at tail" << endl;
+            cout << "\t3. Insert at index" << endl;
+            cout << "\t4. Exit" << endl;
+            cout << "> ";
+            cin >> choice;
+
+            switch (choice)
+            {
+                case 1:
+                {
+                    cout << endl << "\tEnter element to insert: ";
+                    T element;
+                    cin >> element;
+                    addToHead(element);
+                    cout << "\tElement successfully inserted." << endl;
+                    break;
+                }
+
+                case 2:
+                {
+                    cout << endl << "\tEnter element to insert: ";
+                    T element;
+                    cin >> element;
+                    addToTail(element);
+                    cout << "\tElement successfully inserted." << endl;
+                    break;
+                }
+
+                case 3:
+                {
+                    cout << endl << "\tEnter element to insert: ";
+                    T element;
+                    cin >> element;
+                    cout << endl << "\tEnter Index: ";
+                    size_t position = 0;
+                    cin >> position;
+                    addToLoc(element, position);
+                    cout << "\tElement successfully inserted." << endl;
+                }
+
+                case 4:
+                {
+                    flag = false; //Exiting the loop
+                    break;
+                }
+
+                default:
+                {
+                    cout << "Wrong option input. Try Again." << endl;
+                    break;
+                }
+            } //Switch ends
+        }
+    }
+
+    void deleteNode() { //Shows deleting options and calls delFromLoc- Increases code generality
+        bool flag = true;
+        while (flag) {
+            int choice = -1;
+            cout << "Select option:" << endl;
+            cout << "\t1. Delete head" << endl;
+            cout << "\t2. Delete tail" << endl;
+            cout << "\t3. Delete from index" << endl;
+            cout << "\t4. Exit" << endl;
+            cout << "> ";
+            cin >> choice;
+
+            switch (choice)
+            {
+                case 1:
+                {
+                    system("CLS");
+                    delFromHead();
+                    break;
+                }
+
+                case 2:
+                {
+                    system("CLS");
+                    delFromTail();
+                    break;
+                }
+
+                case 3:
+                {
+                    system("CLS");
+                    cout << endl << "\tEnter Index: ";
+                    size_t position = 0;
+                    cin >> position;
+                    if (delFromLoc(position) == 0)
+                        cout << "\tElement successfully inserted." << endl;
+                    else
+                        cout << "Element not found. Hence not deleted." << endl;
+                    break;
+                }
+
+                case 4:
+                {
+                    flag = false; //Exiting the loop
+                    break;
+                }
+
+                default:
+                {
+                    system("CLS");
+                    cout << "Wrong option input. Try Again." << endl;
+                    break;
+                }
+            } //Switch ends
+        }
+    }
+};
+
+
+template <typename List>
+void performOperations(List* list) {
+    bool flag = true;
+    while (flag) {
+        int choice = -1;
+        cout << "Select option:" << endl;
+        cout << "\t1. Insert in List" << endl;
+        cout << "\t2. Display List" << endl;
+        cout << "\t3. Delete Nodes" << endl;
+        cout << "\t4. Search Element" << endl;
+        cout << "\t5. Exit" << endl;
+        cout << "> ";
+        cin >> choice;
+
+        switch (choice)
+        {
+            case 1:
+            {
+                list->insert();
+                break;
+            }
+
+            case 2:
+            {
+                cout << "\tDisplaying List:" << endl;
+                list->displl();
+                cout << endl;
+                break;
+            }
+
+            case 3:
+            {
+                list->deleteNode();
+                break;
+            }
+
+            case 4:
+            {
+                list->search();
+                break;
+            }
+
+            case 5:
+            {
+                flag = false; //Exiting the loop
+                break;
+            }
+
+            default:
+            {
+                cout << "Wrong option input. Try Again." << endl;
+                break;
+            }
+        } //Switch ends
+        cout << "_______________________" << endl;
+    } //While ends
+}
+
+int main()
+{
+    while (true) {
+
+        system("CLS");
+
+        int listType = 0;
+        while (listType > 5 || listType < 1) //This loop can exit program
+        {
+            cout << "Select type of list: " << endl;
+            cout << "\t1. Singly" << endl;
+            cout << "\t2. Doubly" << endl;
+            cout << "\t3. Singly Circular" << endl;
+            cout << "\t4. Doubly Circular" << endl;
+            cout << "\t5. Exit" << endl;
+            cout << "> ";
+            cin >> listType;
+
+            if (listType == 5) {
+                return 0; //Exiting
+            }
+        }
+
+        cout << endl << endl;
+
+        int listDataType = 0;
+        while (listDataType > 4 || listDataType < 1) {
+            cout << "Select Data Type: " << endl;
+            cout << "\t1. Int" << endl;
+            cout << "\t2. Long" << endl;
+            cout << "\t3. Float" << endl;
+            cout << "\t4. Char" << endl;
+            cout << "> ";
+            cin >> listDataType;
+        }
+
+        cout << endl << endl;
+        system("CLS");
+
+        //Singly
+        if (listType == 1)
+        {
+            //int
+            if (listDataType == 1)
+            {
+                /*
+                THIS CODE IS GOING TO BE REPEATED FOR 4 LIST TYPES AND THEIR 4 DATATYPES. In short 16 times.
+                */
+                SinglyLinkedList<int>* list = new SinglyLinkedList<int>;
+                performOperations(list);
+                delete(list);
+            }
+
+                //long
+            else if (listDataType == 2)
+            {
+                SinglyLinkedList<long>* list = new SinglyLinkedList<long>;
+                performOperations(list);
+                delete(list);
+            }
+
+                //float
+            else if (listDataType == 3)
+            {
+                SinglyLinkedList<float>* list = new SinglyLinkedList<float>;
+                performOperations(list);
+                delete(list);
+            }
+
+                //char
+            else if (listDataType == 4)
+            {
+                SinglyLinkedList<char>* list = new SinglyLinkedList<char>;
+                performOperations(list);
+                delete(list);
+            }
+        }
+
+            //Doubly
+        else if (listType == 2)
+        {
+            //int
+            if (listDataType == 1)
+            {
+                DoublyLinkedList<int>* list = new DoublyLinkedList<int>;
+                performOperations(list);
+                delete(list);
+            }
+
+                //long
+            else if (listDataType == 2)
+            {
+                DoublyLinkedList<long>* list = new DoublyLinkedList<long>;
+                performOperations(list);
+                delete(list);
+            }
+
+                //float
+            else if (listDataType == 3)
+            {
+                DoublyLinkedList<float>* list = new DoublyLinkedList<float>;
+                performOperations(list);
+                delete(list);
+
+            }
+
+                //char
+            else if (listDataType == 4)
+            {
+                DoublyLinkedList<char>* list = new DoublyLinkedList<char>;
+                performOperations(list);
+                delete(list);
+            }
+        }
+
+            //Singly Circular
+        else if (listType == 3)
+        {
+            //int
+            if (listDataType == 1)
+            {
+                SinglyCircularll<int>* list = new SinglyCircularll<int>;
+                performOperations(list);
+                delete(list);
+            }
+
+                //long
+            else if (listDataType == 2)
+            {
+                SinglyCircularll<long>* list = new SinglyCircularll<long>;
+                performOperations(list);
+                delete(list);
+            }
+
+                //float
+            else if (listDataType == 3)
+            {
+                SinglyCircularll<float>* list = new SinglyCircularll<float>;
+                performOperations(list);
+                delete(list);
+            }
+
+                //char
+            else if (listDataType == 4)
+            {
+                SinglyCircularll<char>* list = new SinglyCircularll<char>;
+                performOperations(list);
+                delete(list);
+            }
+        }
+
+            //Doubly Circular
+        else if (listType == 4)
+        {
+            //int
+            if (listDataType == 1)
+            {
+                DoublyCircularll<int>* list = new DoublyCircularll<int>;
+                performOperations(list);
+                delete(list);
+            }
+
+                //long
+            else if (listDataType == 2)
+            {
+                DoublyCircularll<long>* list = new DoublyCircularll<long>;
+                performOperations(list);
+                delete(list);
+            }
+
+                //float
+            else if (listDataType == 3)
+            {
+                DoublyCircularll<float>* list = new DoublyCircularll<float>;
+                performOperations(list);
+                delete(list);
+            }
+
+                //char
+            else if (listDataType == 4)
+            {
+                DoublyCircularll<char>* list = new DoublyCircularll<char>;
+                performOperations(list);
+                delete(list);
+            }
+        }
+    }
+    getchar();
+}
