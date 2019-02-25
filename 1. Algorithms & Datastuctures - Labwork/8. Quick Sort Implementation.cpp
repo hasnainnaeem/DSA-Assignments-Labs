@@ -20,8 +20,7 @@ void swap(int* elem1, int* elem2)
 }
 
 int quickSortSub(int* array, int start, int end) {
-	int pivotIndex = (start + end) / 2;
-	int pivot = array[pivotIndex];
+	int pivot = array[end];
 
 	int i = start - 1;
 	for (int j = start; j < end; j++)
@@ -29,11 +28,11 @@ int quickSortSub(int* array, int start, int end) {
 		if (array[j] <= pivot)
 		{
 			i++;
-			swap(array + i, array + j);
+			swap(&array[i], &array[j]);
 		}
 	}
 	int newPivotIndex = i + 1;
-	swap(array + newPivotIndex, array + pivotIndex);
+	swap(&array[newPivotIndex], &array[end]);
 	return (newPivotIndex);
 }
 
@@ -48,7 +47,7 @@ void quickSort(int* array, int start, int end)
 }
 
 
-#define LEN 10
+#define LEN 6
 int main()
 {
 	int array[LEN];
@@ -76,4 +75,3 @@ int main()
 	getchar();
 	return 0;
 }
-
