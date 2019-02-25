@@ -27,7 +27,7 @@ void insertionSort(int* array, int leng)
 	cout << "\t-Running insertion Sort-" << endl;
 
 	int curr;
-	for (int i = 0, j; i < leng; i++)
+	for (int i = 1, j; i < leng; i++)
 	{
 		curr = array[i];
 		j = i - 1;
@@ -38,7 +38,7 @@ void insertionSort(int* array, int leng)
 			j = j - 1;
 		}
 
-		array[j + 1] = curr; //place correct element at correct location in sub array
+		array[j + 1] = curr; //place element at correct location in sub array
 	}
 }
 
