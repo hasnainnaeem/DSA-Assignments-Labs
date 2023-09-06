@@ -1,10 +1,6 @@
 
 //assign1dsa.cpp
 // Singly, Doubly, Circular Linked Lists Implementation using Generic Programming (Template Classes)
-//Written by:
-//        Muhammad Hasnain Naeem
-//        Muazzam Ali Kazmi
-//        Syed Ayan Haider
 
 /*
 Implementation includes:
